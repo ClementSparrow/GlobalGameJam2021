@@ -87,37 +87,6 @@ let frame_timer = null
 
 
 
-// ===== SOUND AND MUSIC =====
-
-let cur_track = 0
-let music_playing = false
-const music_tracks = [
-	// new Audio('music/Oniku Loop2.wav'),
-	new Audio('music/music1.wav'),
-	new Audio('music/music2.wav'),
-	new Audio('music/music3.wav')
-]
-function timeupdate_cb()
-{
-	if (this.currentTime > this.duration - 0.1)
-	{
-		this.pause()
-		this.currentTime = 0
-		cur_track = (cur_track+1)%music_tracks.length //Math.min(cur_track+1, 2)
-		music_tracks[cur_track].ontimeupdate = timeupdate_cb
-		music_tracks[cur_track].play()
-	}
-}
-function toggle_music()
-{
-	music_tracks[cur_track].ontimeupdate = timeupdate_cb
-	if (music_playing)
-		music_tracks[cur_track].pause()
-	else
-		music_tracks[cur_track].play()
-	music_playing = !music_playing
-}
-
 // ===== EVENT MANAGERS =====
 
 const arrow_dirs = {'ArrowLeft': [-1,0,0], 'ArrowRight': [1,0,1], 'ArrowDown': [0,1,2], 'ArrowUp': [0,-1,3]}
@@ -130,7 +99,7 @@ function keyDownManager(event)
 	}
 	if (event.code === 'Space')
 	{
-		toggle_music()
+		music_toggle()
 		return false
 	}
 	if (event.code in arrow_dirs)
@@ -157,5 +126,5 @@ function start()
 	init_level_renderer()
 	init_level_logic()
 	frame_timer = window.requestAnimationFrame(frame)
-	toggle_music()
+	music_toggle()
 }
