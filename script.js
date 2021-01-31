@@ -66,8 +66,9 @@ let first_timestamp = null
 function frame(ts)
 {
 	if (first_timestamp === null)
+		first_timestamp = ts
+	timestamp += (ts - first_timestamp)/1000
 	first_timestamp = ts
-	timestamp = (ts - first_timestamp)/1000
 
 	for (let s of level.sprites)
 		s.frame_update()
@@ -90,6 +91,7 @@ let frame_timer = null
 
 // ===== EVENT MANAGERS =====
 let paused = true
+let muted = false
 const arrow_dirs = {'ArrowLeft': [-1,0,0], 'ArrowRight': [1,0,1], 'ArrowDown': [0,1,2], 'ArrowUp': [0,-1,3]}
 function keyDownManager(event)
 {
@@ -97,8 +99,10 @@ function keyDownManager(event)
 	{
 		if (paused)
 		{
+			first_timestamp = null
 			frame_timer = window.requestAnimationFrame(frame)
-			music_start()
+			if (!muted)
+				music_start()
 		}
 		else
 		{
@@ -108,7 +112,16 @@ function keyDownManager(event)
 		paused = !paused
 		return false // prevents default browser behavior associated with this event.
 	}
-	if (event.code in arrow_dirs)
+	if (event.code === 'KeyM')
+	{
+		if (muted && !paused)
+			music_start()
+		else
+			music_stop()
+		muted = !muted
+		return false
+	}
+	if ( (!paused) && (event.code in arrow_dirs))
 	{
 		[input_dx, input_dy, input_direction] = arrow_dirs[event.code]
 		level.sprites[0].record_input()
@@ -129,8 +142,11 @@ div_start.style.display = 'block'
 
 function start()
 {
+	first_timestamp = null
+	timestamp = 0
 	init_level_renderer()
 	init_level_logic()
+	paused = false
 	frame_timer = window.requestAnimationFrame(frame)
-	music_toggle()
+	music_start()
 }

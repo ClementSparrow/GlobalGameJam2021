@@ -10,7 +10,7 @@ const tiles_image = [
 	// [ load_image('images/20x20AvatMoveR.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/20x20AvatMoveALL_1.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/GroundRoad3.png'), 0,0, 100,100, 100,100],
-	[ load_image('images/Coins_1.png'), 0,0, 100,100, 100,100],
+	[ load_image('images/Coins2.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/Enemie1.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/Enemie2.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/Enemie3.png'), 0,0, 100,100, 100,100],
@@ -42,7 +42,7 @@ const road_tiles = [4, 4, 4, 5, 4, 9, 15, 16, 4, 13, 11, 17, 20, 18, 19, 23].map
 function draw_level()
 {
 	// Clear canvas (would not be necessary if we had no transparent background tiles)
-	ctx.fillStyle = "#f9f7e8";
+	ctx.fillStyle = "#451F45";
 	ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
 	// Draw background and coins on the ground
