@@ -5,10 +5,21 @@ var grid = level_as_string.map( (line) => new Array(line.length).fill(0) )
 let coins = level_as_string.map( (line) => new Array(line.length).fill(false) )
 frozen_coins = level_as_string.map( (line) => new Array(line.length).fill(false) )
 flying_coins = []
-let rooms = []
-let room_types = []
 let sprites = []
 let key_room = null
+
+let rooms = []
+let room_types = []
+let room_centers = []
+function create_room(cell_index)
+{
+	let new_room = new Set()
+	new_room.add(cell_index)
+	rooms.push(new_room)
+	room_types.push(false)
+	room_centers.push(null)
+	return rooms.length-1
+}
 
 function get_cell_data(array, cell_index)
 {
@@ -33,11 +44,7 @@ function find_room(cell_index)
 			return room_index
 		}
 	}
-	let new_room = new Set()
-	new_room.add(cell_index)
-	rooms.push(new_room)
-	room_types.push(false)
-	return rooms.length-1
+	return create_room(cell_index)
 }
 
 // Parse the level_string
@@ -64,6 +71,8 @@ for (const [y, grid_line] of grid.entries())
 			sprites.push( new Ghost(x, y, 1) )
 		else if (ch=='2')
 			sprites.push( new Ghost(x, y, 2) )
+		else if (ch=='2')
+			sprites.push( new Ghost(x, y, 3) )
 		else if (ch=='c')
 			coins[y][x] = true
 	}
@@ -94,6 +103,8 @@ for (const [y, grid_line] of grid.entries())
 }
 
 
+// ----- ROOM BORDERS ----
+
 const all_8_directions = [ [-1,0], [-1,1],  [0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1]];
 
 let room_borders = rooms.map( function(room_content)
@@ -105,7 +116,23 @@ let room_borders = rooms.map( function(room_content)
 	}
 )
 
+for (const [room_index, room_border] of room_borders.entries())
+{
+	if (!room_types[room_index])
+	{
+		// flying coins
+		let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level_width),y+Math.floor(cell_index/level_width)], [0,0] )
+		barycenter_x = barycenter_x/room_border.length
+		barycenter_y = barycenter_y/room_border.length
+		room_centers[room_index] = [barycenter_x, barycenter_y]
+	}
+}
+
 let room_states = Array(rooms.length).fill(false) // not yet revealed
+
+
+
+// ----- COINS -----
 
 function can_drop_coin(x, y) { return !coins[y][x]; }
 function can_pickup_coin(x, y) { return coins[y][x] && !frozen_coins[y][x]; }

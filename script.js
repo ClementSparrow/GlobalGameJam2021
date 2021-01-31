@@ -35,9 +35,10 @@ function update_rooms()
 			else
 			{
 				// flying coins
-				let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level_width),y+Math.floor(cell_index/level_width)], [0,0] )
-				barycenter_x = barycenter_x/room_border.length
-				barycenter_y = barycenter_y/room_border.length
+				let [barycenter_x, barycenter_y] = room_centers[room_index]
+				// let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level_width),y+Math.floor(cell_index/level_width)], [0,0] )
+				// barycenter_x = barycenter_x/room_border.length
+				// barycenter_y = barycenter_y/room_border.length
 				room_border.forEach( function(cell_index) {
 					set_cell_data(coins, cell_index, false); // remove the coins on the ground
 					flying_coins.push( new FlyingCoin(cell_index%level_width, Math.floor(cell_index/level_width), barycenter_x, barycenter_y) )

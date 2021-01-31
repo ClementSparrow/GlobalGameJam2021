@@ -11,8 +11,9 @@ let tiles_image = [
 	[ load_image('images/20x20AvatMoveALL_1.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/GroundRoad_1.png'), 0,0, 100,100, 100,100],
 	[ load_image('images/Coins_1.png'), 0,0, 100,100, 100,100],
-	[ load_image('images/Fantom1.png'), 0,0, 100,100, 100,100],
-	[ load_image('images/Ennemi2.png'), 0,0, 100,100, 100,100],
+	[ load_image('images/Enemie1.png'), 0,0, 100,100, 100,100],
+	[ load_image('images/Enemie2.png'), 0,0, 100,100, 100,100],
+	[ load_image('images/Enemie3.png'), 0,0, 100,100, 100,100],
 ];
 
 // To draw level
@@ -34,7 +35,7 @@ function draw_level()
 	ctx.fillStyle = "#f9f7e8";
 	ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-	// Draw background and coins
+	// Draw background and coins on the ground
 	for (const [i,line] of grid.entries())
 	{
 		for (const [j,background_type] of line.entries())
@@ -52,7 +53,11 @@ function draw_level()
 	// Draw sprites
 	for (const s of sprites)
 		s.draw()
-	// Draw flying coins
+	// Draw coin magnets
+	for (const magnet_position of room_centers)
+		if (magnet_position != null)
+			draw_tile(magnet_position[0], magnet_position[1], 0, 1, 2)
+	// Draw flying coins (and coin stacks)
 	for (const fc of flying_coins)
 		fc.draw()
 }

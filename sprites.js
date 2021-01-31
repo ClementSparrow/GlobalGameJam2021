@@ -140,7 +140,7 @@ Player.prototype.record_input = function()
 // ---- Ghost -----
 
 // const ghost_direction_tiles = [0,1,2,3]
-const ghost_direction_tiles = [1,0,3,2]
+const ghost_direction_tiles = [1,0,2,3]
 const ghost_speed = player_speed // cells per second
 
 Ghost.prototype = Object.create(Sprite.prototype)
