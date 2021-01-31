@@ -35,10 +35,3 @@ function music_stop() {
 	music_playing.currentTime = 0
 	music_playing = null
 }
-
-function music_toggle() {
-	if (music_playing === null)
-		music_start()
-	else
-		music_stop()
-}
