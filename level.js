@@ -55,7 +55,7 @@ for (const [y, grid_line] of grid.entries())
 	{
 		const cell_index = y*level_width + x
 		// 0 = corridor, 1==wall, 2=inside room
-		background_type = { '.': 0, '#': 16, '1': 0, '2': 0, 'p': 0, 'c': 0, '@': 16, 'K': 16}[ch]
+		background_type = { '.': 0, '#': 16, '1': 0, '2': 0, '3': 0, 'p': 0, 'c': 0, '@': 16, 'K': 16}[ch]
 		grid_line[x] = background_type
 		if ((background_type) == 16)
 		{
@@ -71,7 +71,7 @@ for (const [y, grid_line] of grid.entries())
 			sprites.push( new Ghost(x, y, 1) )
 		else if (ch=='2')
 			sprites.push( new Ghost(x, y, 2) )
-		else if (ch=='2')
+		else if (ch=='3')
 			sprites.push( new Ghost(x, y, 3) )
 		else if (ch=='c')
 			coins[y][x] = true
