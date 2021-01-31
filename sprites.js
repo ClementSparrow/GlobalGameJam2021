@@ -35,11 +35,14 @@ Sprite.prototype.get_position = function()
 	return [this.x + dx*interpolation_value, this.y + dy*interpolation_value]
 }
 
-Sprite.prototype.draw = function(tile_x, tile_y, tileset)
+Sprite.prototype.draw = function()
 {
 	const [x, y] = this.get_position()
+	const [tile_x, tile_y, tileset] = this.get_image()
 	draw_tile(x, y, tile_x, tile_y, tileset)
 }
+
+Sprite.prototype.get_image = function() {}
 
 Sprite.prototype.init_in_level = function() {}
 
@@ -81,12 +84,14 @@ function Player(x, y, speed, gold)
 	Sprite.call(this, x, y, 0, speed*player_speed, gold)
 }
 
-Player.prototype.draw = function()
+// Player.prototype.draw = function()
+Player.prototype.get_image = function()
 {
 	const interpolation_value = this.get_interpolation_value()
 	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
 	const frame = Math.floor(dt*player_animation_tiles.length/player_animation_duration) % player_animation_tiles.length
-	Sprite.prototype.draw.call(this, player_animation_tiles[frame], player_direction_tiles[this.direction], 1)
+	return [player_animation_tiles[frame], player_direction_tiles[this.direction], 1];
+	// Sprite.prototype.draw.call(this, player_animation_tiles[frame], player_direction_tiles[this.direction], 1)
 	// Sprite.prototype.draw.call(this, player_direction_tiles[this.direction], player_animation_tiles[frame], 1)
 }
 
@@ -150,11 +155,13 @@ function Ghost(x, y, ghost_type)
 	Sprite.call(this, x, y, 0, 0, 0)
 }
 
-Ghost.prototype.draw = function()
-{
-	// Sprite.prototype.draw.call(this, ghost_direction_tiles[this.direction], 1, 0)
-	Sprite.prototype.draw.call(this, 0, ghost_direction_tiles[this.direction], 3+this.ghost_type)
-}
+// Ghost.prototype.draw = function()
+// {
+// 	// Sprite.prototype.draw.call(this, ghost_direction_tiles[this.direction], 1, 0)
+// 	Sprite.prototype.draw.call(this, 0, ghost_direction_tiles[this.direction], 3+this.ghost_type)
+// }
+Ghost.prototype.get_image = function() { return [0, ghost_direction_tiles[this.direction], 3+this.ghost_type]; }
+
 
 Ghost.prototype.init_in_level = function()
 {
@@ -236,11 +243,12 @@ FlyingCoin.prototype.get_position = function()
 	return [this.x + (this.dest_x - this.x)*interpolation_value, this.y + (this.dest_y - this.y)*interpolation_value]
 }
 
-FlyingCoin.prototype.draw = function()
-{
-	// Sprite.prototype.draw.call(this, 0, 0, 0)
-	Sprite.prototype.draw.call(this, 0, 0, 3)
-}
+// FlyingCoin.prototype.draw = function()
+// {
+// 	// Sprite.prototype.draw.call(this, 0, 0, 0)
+// 	Sprite.prototype.draw.call(this, 0, 0, 3)
+// }
+FlyingCoin.prototype.get_image = function() { return [0,0,3]; }
 
 FlyingCoin.prototype.frame_update = function()
 {
