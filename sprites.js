@@ -76,7 +76,7 @@ const player_direction_tiles = [1,0,3,2] // pour le set 1 bis (4 directions)
 // const player_direction_tiles = [0,0,0,0] // pour le set 1 (seulement droite)
 // const player_direction_tiles = [3,4,5,6] // pour le set 0
 const player_animation_duration = 0.5 // seconds
-const player_speed = 2 // cells per second
+const player_speed = 2.8 // cells per second
 
 Player.prototype = Object.create(Sprite.prototype)
 function Player(x, y, speed, gold)
@@ -91,8 +91,6 @@ Player.prototype.get_image = function()
 	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
 	const frame = Math.floor(dt*player_animation_tiles.length/player_animation_duration) % player_animation_tiles.length
 	return [player_animation_tiles[frame], player_direction_tiles[this.direction], 1];
-	// Sprite.prototype.draw.call(this, player_animation_tiles[frame], player_direction_tiles[this.direction], 1)
-	// Sprite.prototype.draw.call(this, player_direction_tiles[this.direction], player_animation_tiles[frame], 1)
 }
 
 Player.prototype.cell_action = function()
