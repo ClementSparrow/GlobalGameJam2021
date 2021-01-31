@@ -87,14 +87,25 @@ let frame_timer = null
 
 
 
-// ===== EVENT MANAGERS =====
 
+// ===== EVENT MANAGERS =====
+let paused = true
 const arrow_dirs = {'ArrowLeft': [-1,0,0], 'ArrowRight': [1,0,1], 'ArrowDown': [0,1,2], 'ArrowUp': [0,-1,3]}
 function keyDownManager(event)
 {
-	if (event.code == 'Escape')
+	if (event.code === 'Escape' || event.code === 'Pause' || event.code === 'KeyP')
 	{
-		window.cancelAnimationFrame(frame_timer)
+		if (paused)
+		{
+			frame_timer = window.requestAnimationFrame(frame)
+			music_start()
+		}
+		else
+		{
+			window.cancelAnimationFrame(frame_timer)
+			music_stop()
+		}
+		paused = !paused
 		return false // prevents default browser behavior associated with this event.
 	}
 	if (event.code === 'Space')
