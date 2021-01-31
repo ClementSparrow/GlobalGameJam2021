@@ -146,6 +146,8 @@ Player.prototype.record_input = function()
 
 // const ghost_direction_tiles = [0,1,2,3]
 const ghost_direction_tiles = [1,0,2,3]
+const ghost_animation_tiles = [0, 1, 2, 1]
+const ghost_animation_duration = 0.5
 const ghost_speed = player_speed // cells per second
 
 Ghost.prototype = Object.create(Sprite.prototype)
@@ -155,12 +157,11 @@ function Ghost(x, y, ghost_type)
 	Sprite.call(this, x, y, 0, 0, 0)
 }
 
-// Ghost.prototype.draw = function()
-// {
-// 	// Sprite.prototype.draw.call(this, ghost_direction_tiles[this.direction], 1, 0)
-// 	Sprite.prototype.draw.call(this, 0, ghost_direction_tiles[this.direction], 3+this.ghost_type)
-// }
-Ghost.prototype.get_image = function() { return [0, ghost_direction_tiles[this.direction], 3+this.ghost_type]; }
+Ghost.prototype.get_image = function() {
+	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
+	const frame = Math.floor(dt*ghost_animation_tiles.length/ghost_animation_duration) % ghost_animation_tiles.length
+	return [ghost_animation_tiles[frame], ghost_direction_tiles[this.direction], 3+this.ghost_type];
+}
 
 
 Ghost.prototype.init_in_level = function()
