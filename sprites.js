@@ -98,10 +98,10 @@ Player.prototype.get_image = function()
 Player.prototype.cell_action = function()
 {
 	// console.log([this.x, this.y], [this.dx, this.dy], this.last_action_timestamp, timestamp, [input_dx, input_dy])
-	if ((this.gold > 0) && can_drop_coin(this.x, this.y))
+	if ((this.gold > 0) && level.can_drop_coin(this.x, this.y))
 	{
 		// console.log('dropped coin at', this.x, this.y, ', ', this.gold, 'remaining')
-		coins[this.y][this.x] = true
+		level.coins[this.y][this.x] = true
 		this.gold -= 1
 		update_rooms()
 	}
@@ -111,7 +111,7 @@ Player.prototype.cell_action = function()
 Player.prototype.change_direction = function()
 {
 	// console.log(input_direction, [input_dx, input_dy], [this.x, this.y], grid[this.y+input_dy][this.x+input_dx])
-	if ((input_direction === undefined) || (!can_walk(this.x+input_dx, this.y+input_dy)))
+	if ((input_direction === undefined) || (!level.can_walk(this.x+input_dx, this.y+input_dy)))
 	{
 		this.speed = 0
 	}
@@ -173,9 +173,9 @@ Ghost.prototype.init_in_level = function()
 Ghost.prototype.cell_action = function()
 {
 //	pick up gold
-	if (can_pickup_coin(this.x, this.y))
+	if (level.can_pickup_coin(this.x, this.y))
 	{
-		coins[this.y][this.x] = false
+		level.coins[this.y][this.x] = false
 		this.gold += 1
 	}
 //	pick a new direction
@@ -188,19 +188,19 @@ Ghost.prototype.choose_direction = function()
 {
 	let cur_dist = Number.MAX_SAFE_INTEGER
 	let candidates = []
-	let possible_directions = [...directions.entries()].filter( ([dir, [dx,dy]]) => can_walk(this.x+dx, this.y+dy) )
+	let possible_directions = [...directions.entries()].filter( ([dir, [dx,dy]]) => level.can_walk(this.x+dx, this.y+dy) )
 	if (this.speed > 0)
 		possible_directions = possible_directions.filter( ([dir, [dx,dy]]) => (dir != opposite_directions[this.direction]) )
 	for (let [dir,[dx,dy]] of possible_directions)
 	{
 		let X = this.x+dx, Y = this.y+dy, dist = 1
-		while (can_walk(X,Y) && !can_pickup_coin(X,Y))
+		while (level.can_walk(X,Y) && !level.can_pickup_coin(X,Y))
 		{
 			X += dx
 			Y += dy
 			dist += 1
 		}
-		if (!can_pickup_coin(X,Y))
+		if (!level.can_pickup_coin(X,Y))
 			dist = Number.MAX_SAFE_INTEGER
 		if (dist <= cur_dist)
 		{
@@ -244,11 +244,6 @@ FlyingCoin.prototype.get_position = function()
 	return [this.x + (this.dest_x - this.x)*interpolation_value, this.y + (this.dest_y - this.y)*interpolation_value]
 }
 
-// FlyingCoin.prototype.draw = function()
-// {
-// 	// Sprite.prototype.draw.call(this, 0, 0, 0)
-// 	Sprite.prototype.draw.call(this, 0, 0, 3)
-// }
 FlyingCoin.prototype.get_image = function() { return [0,0,3]; }
 
 FlyingCoin.prototype.frame_update = function()

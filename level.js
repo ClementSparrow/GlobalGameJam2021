@@ -1,138 +1,179 @@
-// Create the level structure
-const level_height = level_as_string.length
-const level_width = level_as_string[0].length
-var grid = level_as_string.map( (line) => new Array(line.length).fill(0) )
-let coins = level_as_string.map( (line) => new Array(line.length).fill(false) )
-frozen_coins = level_as_string.map( (line) => new Array(line.length).fill(false) )
-flying_coins = []
-let sprites = []
-let key_room = null
+const all_8_directions = [ [-1,0], [-1,1],  [0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1]];
 
-let rooms = []
-let room_types = []
-let room_centers = []
-function create_room(cell_index)
+
+// ----- PARSING ------
+
+Level.prototype.create_room = function(cell_index)
 {
 	let new_room = new Set()
 	new_room.add(cell_index)
-	rooms.push(new_room)
-	room_types.push(false)
-	room_centers.push(null)
-	return rooms.length-1
+	this.rooms.push(new_room)
+	this.room_types.push(false)
+	this.room_centers.push(null)
+	return this.rooms.length-1
 }
 
-function get_cell_data(array, cell_index)
+Level.prototype.get_cell_data = function(array, cell_index)
 {
-	return array [ Math.floor(cell_index/level_width) ] [ cell_index%level_width ];
+	return array [ Math.floor(cell_index/this.width) ] [ cell_index%this.width ];
 }
-function set_cell_data(array, cell_index, value)
+Level.prototype.set_cell_data = function(array, cell_index, value)
 {
-	array [ Math.floor(cell_index/level_width) ] [ cell_index%level_width ] = value;
+	array [ Math.floor(cell_index/this.width) ] [ cell_index%this.width ] = value;
 }
 
 // auxillary func to find rooms
 // TODO: this is not the correct way to do it and will not work with complex room shapes
-function find_room(cell_index)
+Level.prototype.find_room = function(cell_index)
 {
-	for (let room_index=0; room_index<rooms.length; room_index++)
+	for (let room_index=0; room_index<this.rooms.length; room_index++)
 	{
-		let room_content = rooms[room_index]
-		if ( room_content.has(cell_index-1) || room_content.has(cell_index-level_width) )
+		let room_content = this.rooms[room_index]
+		if ( room_content.has(cell_index-1) || room_content.has(cell_index-this.width) )
 		{
 			// TODO: actually, if the cells above and on the left belong to different rooms we need to merge the rooms
 			room_content.add(cell_index)
 			return room_index
 		}
 	}
-	return create_room(cell_index)
+	return this.create_room(cell_index)
 }
 
-// Parse the level_string
-for (const [y, grid_line] of grid.entries())
+Level.prototype.parse_level_string = function(level_as_string)
 {
-	const line = level_as_string[y]
-	for (const [x, ch] of [...line].entries() )
+	for (const [y, grid_line] of this.grid.entries())
 	{
-		const cell_index = y*level_width + x
-		// 0 = corridor, 1==wall, 2=inside room
-		background_type = { '.': 0, '#': 16, '1': 0, '2': 0, '3': 0, 'p': 0, 'c': 0, '@': 16, 'K': 16}[ch]
-		grid_line[x] = background_type
-		if ((background_type) == 16)
+		const line = level_as_string[y]
+		for (const [x, ch] of [...line].entries() )
 		{
-			let room_index = find_room(cell_index)
-			if (ch=='K')
-				key_room = room_index
-			else if (ch=='#')
-				room_types[room_index] = true
+			const cell_index = y*this.width + x
+			// 0 = corridor, 1==wall, 2=inside room
+			background_type = { '.': 0, '#': 16, '1': 0, '2': 0, '3': 0, 'p': 0, 'c': 0, '@': 16, 'K': 16}[ch]
+			grid_line[x] = background_type
+			if ((background_type) == 16)
+			{
+				let room_index = this.find_room(cell_index)
+				if (ch=='K')
+					key_room = room_index
+				else if (ch=='#')
+					this.room_types[room_index] = true
+			}
+			else if (ch=='p')
+				this.sprites.unshift( new Player(x, y, 0, this.initial_gold) ) // players is always the first sprite
+			else if (ch=='1')
+				this.sprites.push( new Ghost(x, y, 1) )
+			else if (ch=='2')
+				this.sprites.push( new Ghost(x, y, 2) )
+			else if (ch=='3')
+				this.sprites.push( new Ghost(x, y, 3) )
+			else if (ch=='c')
+				this.coins[y][x] = true
 		}
-		else if (ch=='p')
-			sprites.unshift( new Player(x, y, 0, level_initial_gold) ) // players is always the first sprite
-		else if (ch=='1')
-			sprites.push( new Ghost(x, y, 1) )
-		else if (ch=='2')
-			sprites.push( new Ghost(x, y, 2) )
-		else if (ch=='3')
-			sprites.push( new Ghost(x, y, 3) )
-		else if (ch=='c')
-			coins[y][x] = true
 	}
 }
 
-function can_walk(x, y)
+
+
+
+// ----- ROADS -----
+
+Level.prototype.can_walk = function(x, y)
 {
-	const background_type = grid[y][x];
+	const background_type = this.grid[y][x];
 	return (background_type < 16);
 }
 
-function compute_road_type(x, y)
+Level.prototype.compute_road_type = function(x, y)
 {
 	let result = 0
 	for (const [dir, [dx,dy]] of directions.entries())
-		result += (can_walk(x+dx, y+dy) ? 1 : 0)<<dir
+		result += (this.can_walk(x+dx, y+dy) ? 1 : 0)<<dir
 	return result;
 }
 
-for (const [y, grid_line] of grid.entries())
-{
-	for (const [x, background_type] of grid_line.entries() )
-	{
-		if (!can_walk(x,y))
-			continue;
-		grid_line[x] = compute_road_type(x,y)
-	}
-}
 
 
 // ----- ROOM BORDERS ----
 
-const all_8_directions = [ [-1,0], [-1,1],  [0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,-1]];
-
-let room_borders = rooms.map( function(room_content)
-	{
-		const result = [...Array(level_width*level_height).fill().keys()].filter(
-			(_, cell_index) => (all_8_directions.some( ([dx,dy]) => room_content.has(cell_index+level_width*dy+dx) && (get_cell_data(grid, cell_index) < 16) ))
-		);
-		return result;
-	}
-)
-
-for (const [room_index, room_border] of room_borders.entries())
+Level.prototype.find_room_borders = function()
 {
-	if (!room_types[room_index])
+	const cell_indexes = [...Array(this.width*this.height).fill().keys()]
+	this.room_borders = this.rooms.map( (room_content) =>
+		cell_indexes.filter(
+			(_, cell_index) => (all_8_directions.some( ([dx,dy]) => room_content.has(cell_index+this.width*dy+dx) && (this.get_cell_data(this.grid, cell_index) < 16) ))
+		)
+	)
+}
+
+Level.prototype.compute_room_centers = function()
+{
+	for (const [room_index, room_border] of this.room_borders.entries())
 	{
-		// flying coins
-		let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level_width),y+Math.floor(cell_index/level_width)], [0,0] )
-		barycenter_x = barycenter_x/room_border.length
-		barycenter_y = barycenter_y/room_border.length
-		room_centers[room_index] = [barycenter_x, barycenter_y]
+		if (!this.room_types[room_index])
+		{
+			// flying coins
+			let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%this.width),y+Math.floor(cell_index/this.width)], [0,0] )
+			barycenter_x = barycenter_x/room_border.length
+			barycenter_y = barycenter_y/room_border.length
+			this.room_centers[room_index] = [barycenter_x, barycenter_y]
+		}
 	}
 }
 
-let room_states = Array(rooms.length).fill(false) // not yet revealed
 
 
 
 // ----- COINS -----
 
-function can_drop_coin(x, y) { return !coins[y][x]; }
-function can_pickup_coin(x, y) { return coins[y][x] && !frozen_coins[y][x]; }
+Level.prototype.can_drop_coin = function(x, y) { return !this.coins[y][x]; }
+Level.prototype.can_pickup_coin = function(x, y) { return this.coins[y][x] && !this.frozen_coins[y][x]; }
+
+
+
+// ----- CONSTRUCTOR -----
+
+// Create the level structure
+function Level(level_as_string, level_initial_gold)
+{
+	this.initial_gold = level_initial_gold
+	this.height = level_as_string.length
+	this.width = level_as_string[0].length
+
+	// Grid data
+	this.grid = level_as_string.map( (line) => new Array(line.length).fill(0) )
+	this.coins = level_as_string.map( (line) => new Array(line.length).fill(false) )
+	this.frozen_coins = level_as_string.map( (line) => new Array(line.length).fill(false) )
+
+	// Moving objects
+	this.flying_coins = []
+	this.sprites = []
+	this.key_room = null
+
+	// Rooms
+	this.rooms = []
+	this.room_types = []
+	this.room_centers = []
+
+	// Parse the level string
+	this.parse_level_string(level_as_string)
+
+	// Identify the appropriate background tiles for the roads
+	for (const [y, grid_line] of this.grid.entries())
+	{
+		for (const [x, background_type] of grid_line.entries() )
+		{
+			if (!this.can_walk(x,y))
+				continue;
+			grid_line[x] = this.compute_road_type(x,y)
+		}
+	}
+
+	this.find_room_borders()
+	this.compute_room_centers()
+	this.room_states = Array(this.rooms.length).fill(false) // not yet revealed
+}
+
+let level = new Level(level_as_string, level_initial_gold)
+
+
+

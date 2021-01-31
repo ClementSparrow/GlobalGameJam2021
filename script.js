@@ -1,51 +1,41 @@
 
 
-// ===== CLASSES =====
-
-
-// ===== BUILD LEVEL ======
-
-
-// ===== DRAWING ======
-
-
-
-
-// ===== GAME LOGIC =====
-
 // level initialisation : choose random directions for ghosts
-for (let s of sprites)
-	s.init_in_level()
+function init_level_logic()
+{
+	for (let s of level.sprites)
+		s.init_in_level()
+}
 
 // check if a room is surrounded with coins
 function update_rooms()
 {
-	for (const [room_index, room_border] of room_borders.entries())
+	for (const [room_index, room_border] of level.room_borders.entries())
 	{
-		if (room_states[room_index]) // don't check the rooms that are already openned
+		if (level.room_states[room_index]) // don't check the rooms that are already openned
 			continue;
-		if (room_border.every( (cell_index) => get_cell_data(coins, cell_index) ))
+		if (room_border.every( (cell_index) => level.get_cell_data(level.coins, cell_index) ))
 		{
 			// console.log('room', room_index, 'is surrounded')
-			if (room_types[room_index] || room_border.some( (cell_index) => get_cell_data(frozen_coins, cell_index) ))
+			if (level.room_types[room_index] || room_border.some( (cell_index) => level.get_cell_data(level.frozen_coins, cell_index) ))
 			{
 				// freezing coins
-				room_border.forEach( function(cell_index) { set_cell_data(frozen_coins, cell_index, true); } );
+				room_border.forEach( function(cell_index) { level.set_cell_data(level.frozen_coins, cell_index, true); } );
 			}
 			else
 			{
 				// flying coins
-				let [barycenter_x, barycenter_y] = room_centers[room_index]
-				// let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level_width),y+Math.floor(cell_index/level_width)], [0,0] )
+				let [barycenter_x, barycenter_y] = level.room_centers[room_index]
+				// let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level.width),y+Math.floor(cell_index/level.width)], [0,0] )
 				// barycenter_x = barycenter_x/room_border.length
 				// barycenter_y = barycenter_y/room_border.length
 				room_border.forEach( function(cell_index) {
-					set_cell_data(coins, cell_index, false); // remove the coins on the ground
-					flying_coins.push( new FlyingCoin(cell_index%level_width, Math.floor(cell_index/level_width), barycenter_x, barycenter_y) )
+					level.set_cell_data(level.coins, cell_index, false); // remove the coins on the ground
+					level.flying_coins.push( new FlyingCoin(cell_index%level.width, Math.floor(cell_index/level.width), barycenter_x, barycenter_y) )
 				} );
 
 			}
-			room_states[room_index] = true
+			level.room_states[room_index] = true
 		}
 	}
 }
@@ -54,15 +44,15 @@ function update_rooms()
 // check collisions between the player and the ghosts
 function check_collisions()
 {
-	let player = sprites[0];
+	let player = level.sprites[0];
 	const [px, py] = player.get_position()
-	for (let i=1; i<sprites.length; i++)
+	for (let i=1; i<level.sprites.length; i++)
 	{
-		let ghost = sprites[i]
+		let ghost = level.sprites[i]
 		const [x,y] = ghost.get_position()
 		if ( Math.hypot(px-x, py-y) < 0.25 )
 		{
-			//console.log(x, y, sprites[0].x, sprites[0].y)
+			//console.log(x, y, level.sprites[0].x, level.sprites[0].y)
 			player.gold += ghost.gold
 			ghost.gold = 0
 			// TODO : go back somewhere without chasing the player for a while?
@@ -79,9 +69,9 @@ function frame(ts)
 	first_timestamp = ts
 	timestamp = (ts - first_timestamp)/1000
 
-	for (let s of sprites)
+	for (let s of level.sprites)
 		s.frame_update()
-	flying_coins.forEach( (fc) => fc.frame_update() )
+	level.flying_coins.forEach( (fc) => fc.frame_update() )
 	
 	check_collisions()
 	
@@ -118,7 +108,15 @@ function timeupdate_cb()
 		music_tracks[cur_track].play()
 	}
 }
-
+function toggle_music()
+{
+	music_tracks[cur_track].ontimeupdate = timeupdate_cb
+	if (music_playing)
+		music_tracks[cur_track].pause()
+	else
+		music_tracks[cur_track].play()
+	music_playing = !music_playing
+}
 
 // ===== EVENT MANAGERS =====
 
@@ -130,20 +128,15 @@ function keyDownManager(event)
 		window.cancelAnimationFrame(frame_timer)
 		return false // prevents default browser behavior associated with this event.
 	}
- 	if (event.code === 'Space')
- 	{
-        music_tracks[cur_track].ontimeupdate = timeupdate_cb
-        if (music_playing)
-        	music_tracks[cur_track].pause()
-        else
-        	music_tracks[cur_track].play()
-        music_playing = !music_playing
-        return false
-    }
-    if (event.code in arrow_dirs)
+	if (event.code === 'Space')
+	{
+		toggle_music()
+		return false
+	}
+	if (event.code in arrow_dirs)
 	{
 		[input_dx, input_dy, input_direction] = arrow_dirs[event.code]
-		sprites[0].record_input()
+		level.sprites[0].record_input()
 		return false
 	}
 	return true
@@ -152,5 +145,17 @@ function keyDownManager(event)
 window.onload = function()
 {
 	window.onkeydown = keyDownManager
+}
+
+div_end = document.getElementById('div_end')
+div_end.style.display = 'none' // 'block' to show it
+div_start = document.getElementById('div_start')
+div_start.style.display = 'block'
+
+function start()
+{
+	init_level_renderer()
+	init_level_logic()
 	frame_timer = window.requestAnimationFrame(frame)
+	toggle_music()
 }
