@@ -25,10 +25,10 @@ let coin_stack_delta = null
 
 function init_level_renderer()
 {
-	const canvas_width_in_tiles = level.width + level.sprites.length
+	const canvas_width_in_tiles = level.width + level.sprites.length + 1
 	const level_aspect_ratio = canvas_width_in_tiles / level.height;
 	const idealTileSize = Math.floor( (canvas_aspect_ratio > level_aspect_ratio) ? (canvas.clientHeight / level.height) : (canvas.clientWidth / canvas_width_in_tiles) )
-	tileSize = idealTileSize - (idealTileSize%20)
+	tileSize = idealTileSize //- (idealTileSize%20)
 	coin_stack_delta = Math.max( 1, Math.min( 10, Math.floor(((level.height-2)*tileSize)/level.initial_gold) ) ) / tileSize
 }
 
@@ -70,11 +70,18 @@ function draw_level()
 	// Draw flying coins (and coin stacks)
 	for (const fc of level.flying_coins)
 		fc.draw()
+	// Draw visualisation of how much gold has been dropped compared to the objective
+	for (let i=0; i<level.height; i++)
+		draw_tile(level.width, level.height-1-i, 0, 3, 2)
+	for (let i=gold_droped+1; i<gold_drop_objective; i++)
+		draw_tile(level.width, level.height-2-i*coin_stack_delta, 0, 1, 3)
+	for (let i=0; i<gold_droped; i++)
+		draw_tile(level.width, level.height-2-i*coin_stack_delta, 0, 0, 3)
 	// Draw visualisation of how much gold each sprite is holding
 	for (const [sprite_index, sprite] of level.sprites.entries())
 	{
 		const sprite_image = sprite.get_image()
-		const [x, y] = [level.width+sprite_index, level.height-1]
+		const [x, y] = [level.width+sprite_index+1, level.height-1]
 		for (let i=0; i<level.height; i++)
 			draw_tile(x, y-i, 0, 3, 2)
 		draw_tile(x, y, sprite_image[0], sprite_image[1], sprite_image[2])

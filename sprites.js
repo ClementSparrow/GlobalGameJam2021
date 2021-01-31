@@ -101,6 +101,7 @@ Player.prototype.cell_action = function()
 		// console.log('dropped coin at', this.x, this.y, ', ', this.gold, 'remaining')
 		level.coins[this.y][this.x] = true
 		this.gold -= 1
+		check_win_condition()
 		update_rooms()
 	}
 	this.change_direction()

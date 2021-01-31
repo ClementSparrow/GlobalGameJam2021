@@ -3,8 +3,24 @@
 // level initialisation : choose random directions for ghosts
 function init_level_logic()
 {
+	gold_droped = 0
 	for (let s of level.sprites)
 		s.init_in_level()
+}
+
+let gold_droped = null
+function check_win_condition()
+{
+	// gold_droped = level.flying_coins.length + [...Array(level.width*level.height).fill().keys()].reduce( (s, cell_index) => level.get_cell_data(level.coins, cell_index) ? s+1:s)
+	gold_droped = level.initial_gold - level.sprites.reduce( (sum, sprite) => sum+sprite.gold, 0)
+
+	if (gold_droped >= gold_drop_objective)
+	{
+		paused = true
+		window.cancelAnimationFrame(frame_timer)
+		music_stop()
+		div_start.style.display = 'block'
+	}
 }
 
 // check if a room is surrounded with coins
