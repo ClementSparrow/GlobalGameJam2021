@@ -1,11 +1,52 @@
 <!doctype html>
 <html>
-<body>
-<canvas id=canvas width=800 height=600 style="border:1px solid grey"></canvas>
-<script src=prologue.js></script>
-<script src=sprites.js></script>
-<script src=level.js></script>
-<script src=drawing.js></script>
-<script src=script.js></script>
+<head>
+	<title>LSFTGYLTSYS</title>
+	<style>
+		@font-face {
+			font-family: 'Pipe Dream';
+			src: url('PipeDream.ttf');
+		}
+		button {
+			display: block;
+			margin: 1em auto;
+			padding: 8px 12px;
+			background-color: transparent;
+			border: 3px solid #F36;
+			color: #F36;
+			font: 30px Pipe Dream;
+			cursor: pointer;
+		}
+		button:hover { box-shadow: 0 0 12px #F36 }
+	</style>
+</head>
+<!-- Couleurs: #33C2AA, #451F45, #66324C, #FDA8BD, #F36 -->
+<body style="
+	font: 22px Pipe Dream;
+	text-align: center;
+	background-color: #451F45;
+	color: #33C2AA;">
+	<h2>Lost Souls Found The Gold You Lost To Save Your Soul</h2>
+	<canvas id=canvas width=800 height=600 style="
+		display: block;
+		margin: 0 auto"></canvas>
+	<div id=div_start style="
+		display: block;
+		position: fixed;
+		top: 50%; left: 0;
+		transform: translate(0,-50%);
+		margin: auto;
+		background-color: #66324C;
+		box-shadow: 0 0 40px #FDA8BD">
+		<h2>Level <span id=spn_level>1</span></h2>
+		<p id=p_intro>Foolish self! After years of gathering coins, your soul has been tainted with money. To redeem your peace of mind, you must lay down all of your coins. The greedy Pac-Men will happily collect them, but don't hit them or you'll get their count back!</p>
+		<p>Controls: arrow keys to move, P to pause/unpause the game</p>
+		<button onclick="div_start.style.display='none'; start()">Start</button>
+	</div>
+	<script src=prologue.js></script>
+	<script src=sprites.js></script>
+	<script src=level.js></script>
+	<script src=drawing.js></script>
+	<script src=script.js></script>
 </body>
 </html>
