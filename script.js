@@ -16,6 +16,7 @@ function check_win_condition()
 
 	if (gold_droped >= gold_drop_objective)
 	{
+		cur_level += 1
 		paused = true
 		window.cancelAnimationFrame(frame_timer)
 		music_stop()
@@ -163,6 +164,7 @@ function start()
 {
 	first_timestamp = null
 	timestamp = 0
+	gold_drop_objective = gold_drop_objectives[cur_level];
 	level = new Level(levels[cur_level], 100)
 	init_level_renderer()
 	init_level_logic()

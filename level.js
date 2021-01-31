@@ -43,6 +43,9 @@ const levels = [
 	 '#3...........2#',
 	 '###############']
 ]
+const gold_drop_objectives = [80, 80, 80];
+let gold_drop_objective = null
+
 
 // ----- PARSING ------
 
