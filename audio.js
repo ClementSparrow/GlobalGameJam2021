@@ -16,6 +16,9 @@ const music_tracks = [
 	new Audio('music/music4.wav'),
 	new Audio('music/music5.wav'),
 	new Audio('music/music6.wav')]
+const coin_sound = new Audio('music/coin.wav')
+const powerup_sound = new Audio('music/powerup.wav')
+const hit_sound = new Audio('music/hit.wav')
 
 function music_update_cb() {
 	if (this.currentTime > this.duration - 0.1) {
