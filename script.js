@@ -109,11 +109,6 @@ function keyDownManager(event)
 		paused = !paused
 		return false // prevents default browser behavior associated with this event.
 	}
-	if (event.code === 'Space')
-	{
-		toggle_music()
-		return false
-	}
 	if (event.code in arrow_dirs)
 	{
 		[input_dx, input_dy, input_direction] = arrow_dirs[event.code]
