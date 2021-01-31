@@ -140,10 +140,14 @@ div_end.style.display = 'none' // 'block' to show it
 div_start = document.getElementById('div_start')
 div_start.style.display = 'block'
 
+let level = null
+let cur_level = 0
+let timestamp = 0
 function start()
 {
 	first_timestamp = null
 	timestamp = 0
+	level = new Level(levels[cur_level], 100)
 	init_level_renderer()
 	init_level_logic()
 	paused = false
