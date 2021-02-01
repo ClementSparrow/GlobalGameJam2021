@@ -42,7 +42,7 @@ const road_tiles = [4, 4, 4, 5, 4, 9, 15, 16, 4, 13, 11, 17, 20, 18, 19, 23].map
 function draw_level()
 {
 	// Clear canvas (would not be necessary if we had no transparent background tiles)
-	ctx.fillStyle = "#451F45";
+	ctx.fillStyle = "#451F45"; // html page background color
 	ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
 	// Draw background and coins on the ground
@@ -71,8 +71,8 @@ function draw_level()
 	for (const fc of level.flying_coins)
 		fc.draw()
 	// Draw visualisation of how much gold has been dropped compared to the objective
-	for (let i=0; i<level.height; i++)
-		draw_tile(level.width, level.height-1-i, 0, 3, 2)
+	ctx.fillStyle = '#2f162f' // color of the walls
+	ctx.fillRect(level.width*tileSize, 0, (level.sprites.length+1)*tileSize, level.height*tileSize);
 	for (let i=gold_droped+1; i<gold_drop_objective; i++)
 		draw_tile(level.width, level.height-2-i*coin_stack_delta, 0, 1, 3)
 	for (let i=0; i<gold_droped; i++)
@@ -82,8 +82,6 @@ function draw_level()
 	{
 		const sprite_image = sprite.get_image()
 		const [x, y] = [level.width+sprite_index+1, level.height-1]
-		for (let i=0; i<level.height; i++)
-			draw_tile(x, y-i, 0, 3, 2)
 		draw_tile(x, y, sprite_image[0], sprite_image[1], sprite_image[2])
 		for (let i=0; i<sprite.gold; i++)
 			draw_tile(x, y-1-i*coin_stack_delta, 0, 0, 3)
