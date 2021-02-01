@@ -9,19 +9,15 @@ function init_level_logic()
 }
 
 let gold_droped = null
+let level_won = false
 function check_win_condition()
 {
 	// gold_droped = level.flying_coins.length + [...Array(level.width*level.height).fill().keys()].reduce( (s, cell_index) => level.get_cell_data(level.coins, cell_index) ? s+1:s)
 	gold_droped = level.initial_gold - level.sprites.reduce( (sum, sprite) => sum+sprite.gold, 0)
+	progression = gold_droped / (gold_drop_objective+1)
 
 	if (gold_droped >= gold_drop_objective)
-	{
-		cur_level += 1
-		paused = true
-		window.cancelAnimationFrame(frame_timer)
-		music_stop()
-		div_start.style.display = 'block'
-	}
+		level_won = true
 }
 
 // check if a room is surrounded with coins
@@ -92,7 +88,10 @@ function frame(ts)
 	
 	draw_level()
 	
-	frame_timer = window.requestAnimationFrame(frame) // like setInterval but native frequency
+	if (level_won)
+		end_level()
+	else
+		frame_timer = window.requestAnimationFrame(frame) // like setInterval but native frequency
 }
 let frame_timer = null
 
@@ -154,11 +153,30 @@ div_end.style.display = 'none' // 'block' to show it
 div_start = document.getElementById('div_start')
 div_start.style.display = 'block'
 
+function end_level()
+{
+	paused = true
+	window.cancelAnimationFrame(frame_timer)
+	music_stop()
+	next_level()
+}
+
+function next_level()
+{
+	cur_level += 1
+	if (cur_level >= levels.length)
+		return // todo: win screen
+	document.getElementById('spn_level').innerText = ''+(cur_level+1)
+	div_start.style.display = 'block'
+}
+
 let level = null
 let cur_level = 0
 let timestamp = 0
 function start()
 {
+	console.log('starting level', cur_level)
+	level_won = false
 	first_timestamp = null
 	timestamp = 0
 	gold_drop_objective = gold_drop_objectives[cur_level];
