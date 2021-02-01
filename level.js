@@ -47,6 +47,18 @@ const gold_drop_objectives = [80, 80, 80];
 let gold_drop_objective = null
 
 
+Level.prototype.get_cell_data = function(array, cell_index)
+{
+	return array [ Math.floor(cell_index/this.width) ] [ cell_index%this.width ];
+}
+Level.prototype.set_cell_data = function(array, cell_index, value)
+{
+	array [ Math.floor(cell_index/this.width) ] [ cell_index%this.width ] = value;
+}
+
+
+
+
 // ----- PARSING ------
 
 Level.prototype.create_room = function(cell_index)
@@ -59,30 +71,37 @@ Level.prototype.create_room = function(cell_index)
 	return this.rooms.length-1
 }
 
-Level.prototype.get_cell_data = function(array, cell_index)
+Level.prototype.delete_room = function(room_index)
 {
-	return array [ Math.floor(cell_index/this.width) ] [ cell_index%this.width ];
+	this.rooms.splice(room_index, 1)
+	this.room_types.splice(room_index, 1)
+	this.room_centers.splice(room_index, 1)
 }
-Level.prototype.set_cell_data = function(array, cell_index, value)
+
+Level.prototype.merge_rooms = function(room_index1, room_index2)
 {
-	array [ Math.floor(cell_index/this.width) ] [ cell_index%this.width ] = value;
+	this.rooms[room_index2].forEach( (cell_index) => this.rooms[room_index1].add(cell_index) )
+	this.room_types[room_index1] = this.room_types[room_index1] | this.room_types[room_index2]
+	this.delete_room(room_index2)
 }
 
 // auxillary func to find rooms
 // TODO: this is not the correct way to do it and will not work with complex room shapes
 Level.prototype.find_room = function(cell_index)
 {
-	for (let room_index=0; room_index<this.rooms.length; room_index++)
-	{
-		let room_content = this.rooms[room_index]
-		if ( room_content.has(cell_index-1) || room_content.has(cell_index-this.width) )
-		{
-			// TODO: actually, if the cells above and on the left belong to different rooms we need to merge the rooms
-			room_content.add(cell_index)
-			return room_index
-		}
-	}
-	return this.create_room(cell_index)
+	const index_of_room_on_the_left = this.rooms.findIndex( (room_content) => room_content.has(cell_index-this.width) )
+	const index_of_room_above       = this.rooms.findIndex( (room_content) => room_content.has(cell_index-1) )
+	
+	let nearby_rooms = new Set([index_of_room_on_the_left, index_of_room_above])
+	nearby_rooms.delete(-1)
+
+	if (nearby_rooms.size == 0) // create a new room
+		return this.create_room(cell_index)
+	
+	// extend a nearby room with this cell
+	const result = [...nearby_rooms].pop()
+	this.rooms[result].add(cell_index)
+	return (nearby_rooms.size == 1) ? result : this.merge_rooms(index_of_room_above, index_of_room_on_the_left)
 }
 
 Level.prototype.parse_level_string = function(level_as_string)
