@@ -81,13 +81,11 @@ const player_speed = 2.8 // cells per second
 Player.prototype = Object.create(Sprite.prototype)
 function Player(x, y, speed, gold)
 {
-	Sprite.call(this, x, y, 0, speed*player_speed, gold)
+	Sprite.call(this, x, y, 2, speed*player_speed, gold)
 }
 
-// Player.prototype.draw = function()
 Player.prototype.get_image = function()
 {
-	const interpolation_value = this.get_interpolation_value()
 	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
 	const frame = Math.floor(dt*player_animation_tiles.length/player_animation_duration) % player_animation_tiles.length
 	return [player_animation_tiles[frame], player_direction_tiles[this.direction], 1];
@@ -95,10 +93,9 @@ Player.prototype.get_image = function()
 
 Player.prototype.cell_action = function()
 {
-	// console.log([this.x, this.y], [this.dx, this.dy], this.last_action_timestamp, timestamp, [input_dx, input_dy])
 	if ((this.gold > 0) && level.can_drop_coin(this.x, this.y))
 	{
-		// console.log('dropped coin at', this.x, this.y, ', ', this.gold, 'remaining')
+		// TODO: move this out of the Player class, as it is a game mechanic that could also be given to ghosts
 		level.coins[this.y][this.x] = true
 		this.gold -= 1
 		// coin_sound.play()
@@ -110,7 +107,6 @@ Player.prototype.cell_action = function()
 
 Player.prototype.change_direction = function()
 {
-	// console.log(input_direction, [input_dx, input_dy], [this.x, this.y], grid[this.y+input_dy][this.x+input_dx])
 	if ((input_direction === undefined) || (!level.can_walk(this.x+input_dx, this.y+input_dy)))
 	{
 		this.speed = 0
@@ -157,7 +153,8 @@ function Ghost(x, y, ghost_type)
 	Sprite.call(this, x, y, 0, 0, 0)
 }
 
-Ghost.prototype.get_image = function() {
+Ghost.prototype.get_image = function()
+{
 	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
 	const frame = Math.floor(dt*ghost_animation_tiles.length/ghost_animation_duration) % ghost_animation_tiles.length
 	return [ghost_animation_tiles[frame], ghost_direction_tiles[this.direction], 3+this.ghost_type];
@@ -182,26 +179,24 @@ Ghost.prototype.cell_action = function()
 	this.choose_direction();
 }
 
-// at intersections, ghosts will go towards the closest coin in line of sight,
-// and otherwise a random non-backward direction
-Ghost.prototype.choose_direction = function()
+function find_candidate_directions(start_x, start_y, possible_directions, max_dist = Number.MAX_SAFE_INTEGER)
 {
 	let cur_dist = Number.MAX_SAFE_INTEGER
 	let candidates = []
-	let possible_directions = [...directions.entries()].filter( ([dir, [dx,dy]]) => level.can_walk(this.x+dx, this.y+dy) )
-	if (this.speed > 0)
-		possible_directions = possible_directions.filter( ([dir, [dx,dy]]) => (dir != opposite_directions[this.direction]) )
-	for (let [dir,[dx,dy]] of possible_directions)
+	for (const [dir,[dx,dy]] of possible_directions)
 	{
-		let X = this.x+dx, Y = this.y+dy, dist = 1
-		while (level.can_walk(X,Y) && !level.can_pickup_coin(X,Y))
+		let X = start_x+dx, Y = start_y+dy, dist = 1
+		while (level.can_walk(X,Y) && !level.can_pickup_coin(X,Y) && (dist < max_dist))
 		{
 			X += dx
 			Y += dy
 			dist += 1
 		}
-		if (!level.can_pickup_coin(X,Y))
-			dist = Number.MAX_SAFE_INTEGER
+		if (!level.can_pickup_coin(X,Y)) // no coin is visible
+			if (!level.can_walk(X,Y)) // prefer a direction with out-of-sight cells over a direction with a wall in sight
+				dist = Number.MAX_SAFE_INTEGER
+			else
+				dist += 1
 		if (dist <= cur_dist)
 		{
 			if (dist < cur_dist)
@@ -212,8 +207,19 @@ Ghost.prototype.choose_direction = function()
 			candidates.push([dir,[dx,dy]])
 		}
 	}
-	if (cur_dist === Number.MAX_SAFE_INTEGER)
-		candidates = possible_directions//.map( ([dir, [dx,dy]]) => dir )//.filter(dir => (dir != opposite_directions[this.direction]))
+	// if (cur_dist === Number.MAX_SAFE_INTEGER)
+	// 	return possible_directions
+	return candidates
+}
+
+// at intersections, ghosts will go towards the closest coin in line of sight,
+// and otherwise a random non-backward direction
+Ghost.prototype.choose_direction = function()
+{
+	let possible_directions = [...directions.entries()].filter( ([dir, [dx,dy]]) => level.can_walk(this.x+dx, this.y+dy) )
+	if (this.speed > 0)
+		possible_directions = possible_directions.filter( ([dir, [dx,dy]]) => (dir != opposite_directions[this.direction]) )
+	const candidates = find_candidate_directions(this.x, this.y, possible_directions, 3)
 	this.direction = candidates[Math.floor(Math.random()*candidates.length)][0]
 	this.speed = ghost_speed
 	this.animation_ref_end = this.animation_ref_start + 1.0/this.speed
