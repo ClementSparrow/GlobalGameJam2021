@@ -33,7 +33,6 @@ function update_rooms()
 			continue;
 		if (room_border.every( (cell_index) => level.get_cell_data(level.coins, cell_index) ))
 		{
-			// console.log('room', room_index, 'is surrounded')
 			if (level.room_types[room_index] || room_border.some( (cell_index) => level.get_cell_data(level.frozen_coins, cell_index) ))
 			{
 				// freezing coins
@@ -43,14 +42,11 @@ function update_rooms()
 			{
 				// flying coins
 				let [barycenter_x, barycenter_y] = level.room_centers[room_index]
-				// let [barycenter_x, barycenter_y] = room_border.reduce( ([x,y], cell_index) => [x+(cell_index%level.width),y+Math.floor(cell_index/level.width)], [0,0] )
-				// barycenter_x = barycenter_x/room_border.length
-				// barycenter_y = barycenter_y/room_border.length
 				room_border.forEach( function(cell_index) {
 					level.set_cell_data(level.coins, cell_index, false); // remove the coins on the ground
 					level.flying_coins.push( new FlyingCoin(cell_index%level.width, Math.floor(cell_index/level.width), barycenter_x, barycenter_y) )
 				} );
-
+				powerup_sound.play()
 			}
 			level.room_states[room_index] = true
 		}
@@ -73,6 +69,7 @@ function check_collisions()
 			player.gold += ghost.gold
 			ghost.gold = 0
 			// TODO : go back somewhere without chasing the player for a while?
+			hit_sound.play()
 			return
 		}
 	}
