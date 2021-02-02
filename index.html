@@ -1,6 +1,7 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
+	<meta charset="utf-8">
 	<title>LSFTGYLTSYS</title>
 	<style>
 		@font-face {
@@ -18,27 +19,35 @@
 			cursor: pointer;
 		}
 		button:hover { box-shadow: 0 0 12px #F36 }
+		body {
+			font: 22px Pipe Dream;
+			text-align: center;
+			background-color: #451F45;
+			color: #33C2AA;
+		}
+		#canvas {
+			display: block;
+			margin: 0 auto;
+		}
+		#div_start, #div_end {
+			position: fixed;
+			width: 100%;
+			top: 50%; left: 0;
+			transform: translate(0,-50%);
+			margin: auto;
+			background-color: #66324C;
+			box-shadow: 0 0 40px #FDA8BD;
+		}
+		#div_start { display: block; }
+		#div_end { display: none; }
+		#spn_score, #spn_level { color: #FDA8BD; }
 	</style>
 </head>
 <!-- Couleurs: #33C2AA, #451F45, #66324C, #FDA8BD, #F36 -->
-<body style="
-	font: 22px Pipe Dream;
-	text-align: center;
-	background-color: #451F45;
-	color: #33C2AA;">
+<body>
 	<h2>Lost Souls Found The Gold You Lost To Save Your Soul</h2>
-	<canvas id=canvas width=800 height=600 style="
-		display: block;
-		margin: 0 auto"></canvas>
-	<div id=div_start style="
-		display: block;
-		position: fixed;
-		width: 100%;
-		top: 50%; left: 0;
-		transform: translate(0,-50%);
-		margin: auto;
-		background-color: #66324C;
-		box-shadow: 0 0 40px #FDA8BD">
+	<canvas id=canvas width=800 height=600></canvas>
+	<div id=div_start>
 		<h2>Level <span id=spn_level>1</span></h2>
 		<p id=p_intro>Foolish self! After years of gathering coins, your soul has been tainted with money.<br/>
 		To redeem your peace of mind, you must lay down all of your coins.<br/>
@@ -46,17 +55,9 @@
 		<p>Controls: arrow keys to move, P to pause/unpause the game</p>
 		<button onclick="div_start.style.display='none'; start()">Start</button>
 	</div>
-	<div id=div_end style="
-		display: none;
-		position: fixed;
-		width: 100%;
-		top: 50%; left: 0;
-		transform: translate(0,-50%);
-		margin: auto;
-		background-color: #66324C;
-		box-shadow: 0 0 40px #FDA8BD">
+	<div id=div_end>
 		<h2>Game Over</h2>
-		<p>Congratulations, you lost a total of <span id=spn_score style="color: #FDA8BD">N</span> coins over <span id=spn_levels style="color: #FDA8BD">N</span> levels!</p>
+		<p>Congratulations, you lost a total of <span id=spn_score >N</span> coins over <span id=spn_levels>N</span> levels!</p>
 		<p>Credits: Clement Sparrow (Programming), Nicole Pong (Graphics), Thibault Raffaillac (Music, UI)</p>
 		<button onclick="div_end.style.display='none'; div_start.style.display='block'">Reset</button>
 	</div>
