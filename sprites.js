@@ -3,6 +3,57 @@ const directions = [[-1,0], [1,0], [0,1], [0,-1]] // West, East, South, North
 const opposite_directions = [ 1, 0, 3, 2 ]
 
 
+function PositionAnimation(start_x, start_y, end_x, end_y, speed)
+{
+	this.start_x = start_x
+	this.start_y = start_y
+	this.end_x = end_x
+	this.end_y = end_y
+	this.speed = speed
+	this.start_time = timestamp
+	this.end_time = timestamp + Math.hypot(end_x - start_x, end_y - start_y)/speed
+}
+
+function directionalPositionAnimation(x, y, direction, speed)
+{
+	const [dx, dy] = directions[direction]
+	return new PositionAnimation(x, y, x+dx, y+dy, speed)
+}
+
+PositionAnimation.prototype.get_interpolation_value = function()
+{
+	return (timestamp - this.start_time) / (this.end_time - this.start_time);
+}
+
+PositionAnimation.prototype.get_position = function()
+{
+	const interpolation_value = this.get_interpolation_value()
+	return [this.start_x + (this.end_x - this.start_x)*interpolation_value, this.start_y + (this.end_y - this.start_y)*interpolation_value]
+}
+
+PositionAnimation.prototype.finished = function()
+{
+	return 	(this.get_interpolation_value() >= 1.0)
+}
+
+PositionAnimation.prototype.reverse = function()
+{
+	// reverse start and end positions
+	const [x,y] = [this.end_x, this.end_y];
+	this.end_x = this.start_x
+	this.end_y = this.start_y
+	this.start_x = x
+	this.start_y = y
+
+	// compute adequate timestamps
+	const [time_since_start, time_to_end] = [timestamp - this.start_time, this.end_time - timestamp]
+	this.start_time = timestamp - time_to_end
+	this.end_time = timestamp + time_since_start
+}
+
+
+
+
 // ---- Sprite -----
 
 function Sprite(x, y, direction, speed, gold)
@@ -12,27 +63,13 @@ function Sprite(x, y, direction, speed, gold)
 	this.y = y // int, in units of cells
 	// Direction the sprite is facing
 	this.direction = direction
-	// Speed it's going at in this direction (float)
-	this.speed = speed
 	this.gold = gold // how many coins it holds
-	this.animation_ref_start = timestamp
-	this.animation_ref_end = null
-}
-
-Sprite.prototype.get_interpolation_value = function()
-{
-	if (this.animation_ref_end === null)
-		return null
-	return (timestamp - this.animation_ref_start) / (this.animation_ref_end - this.animation_ref_start);
+	this.position_animation = ((speed==0) || (direction===null)) ? null : directionalPositionAnimation(x, y, direction, speed)
 }
 
 Sprite.prototype.get_position = function()
 {
-	const interpolation_value = this.get_interpolation_value()
-	if ((interpolation_value === null) || (this.direction === null))
-		return [this.x, this.y]
-	const [dx, dy] = directions[this.direction]
-	return [this.x + dx*interpolation_value, this.y + dy*interpolation_value]
+	return (this.position_animation === null) ? [this.x, this.y] : this.position_animation.get_position()
 }
 
 Sprite.prototype.draw = function()
@@ -48,21 +85,14 @@ Sprite.prototype.init_in_level = function() {}
 
 Sprite.prototype.frame_update = function()
 {
-	const interpolation_value = this.get_interpolation_value()
-	if (interpolation_value === null)
-		return;
-	if (interpolation_value >= 1)
-	{
+	if ((this.position_animation === null) || (!this.position_animation.finished()))
+		return
+	this.x = this.position_animation.end_x
+	this.y = this.position_animation.end_y
 	//	ends the current animation
-		this.animation_ref_start = this.animation_ref_end
-		this.animation_ref_end = null
-	//	and move sprite accordingly
-		const [dx, dy] = directions[this.direction]
-		this.x += dx
-		this.y += dy
-	//	start a new motion animation if needed
-		this.cell_action()
-	}
+	this.position_animation = null
+	//	start a new position animation if needed
+	this.cell_action()
 }
 
 Sprite.prototype.cell_action = function() {}
@@ -86,8 +116,7 @@ function Player(x, y, speed, gold)
 
 Player.prototype.get_image = function()
 {
-	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
-	const frame = Math.floor(dt*player_animation_tiles.length/player_animation_duration) % player_animation_tiles.length
+	const frame = Math.floor(timestamp*player_animation_tiles.length/player_animation_duration) % player_animation_tiles.length
 	return [player_animation_tiles[frame], player_direction_tiles[this.direction], 1];
 }
 
@@ -107,33 +136,28 @@ Player.prototype.cell_action = function()
 
 Player.prototype.change_direction = function()
 {
-	if ((input_direction === undefined) || (!level.can_walk(this.x+input_dx, this.y+input_dy)))
+	const [dest_x, dest_y] = [this.x+input_dx, this.y+input_dy]
+	if ((input_direction === undefined) || (!level.can_walk(dest_x, dest_y)))
 	{
-		this.speed = 0
+		this.position_animation = null
 	}
 	else
 	{
 		this.direction = input_direction
-		this.speed = player_speed
-		this.animation_ref_end = this.animation_ref_start + 1.0/this.speed
+		this.position_animation = new PositionAnimation(this.x, this.y, dest_x, dest_y, player_speed)
 	}
 }
 
 Player.prototype.record_input = function()
 {
-	if (this.speed == 0)
+	if (this.position_animation === null)
 	{
-		this.animation_ref_start = timestamp
 		this.change_direction()
 	}
 	else if ( input_direction == opposite_directions[this.direction]) // moving back
 	{
-		const interpolation_value = this.get_interpolation_value()
+		this.position_animation.reverse()
 		this.direction = input_direction
-		this.x -= input_dx
-		this.y -= input_dy
-		this.animation_ref_end = timestamp + interpolation_value * (1/this.speed)
-		this.animation_ref_start = this.animation_ref_end - (1/this.speed)
 	}
 }
 
@@ -155,16 +179,15 @@ function Ghost(x, y, ghost_type)
 
 Ghost.prototype.get_image = function()
 {
-	const dt = timestamp - this.animation_ref_start // we should have an animation class, and use one for the sprite position and another one for the animation frames
-	const frame = Math.floor(dt*ghost_animation_tiles.length/ghost_animation_duration) % ghost_animation_tiles.length
+	// TODO: this is the same code than in Player.prototype.get_image, we should factorize that
+	const frame = Math.floor(timestamp*ghost_animation_tiles.length/ghost_animation_duration) % ghost_animation_tiles.length
 	return [ghost_animation_tiles[frame], ghost_direction_tiles[this.direction], 3+this.ghost_type];
 }
 
 
 Ghost.prototype.init_in_level = function()
 {
-	this.choose_direction()
-	this.animation_ref_end = this.animation_ref_start + 1.0/ghost_speed
+	this.choose_direction(true)
 }
 
 Ghost.prototype.cell_action = function()
@@ -214,15 +237,14 @@ function find_candidate_directions(start_x, start_y, possible_directions, max_di
 
 // at intersections, ghosts will go towards the closest coin in line of sight,
 // and otherwise a random non-backward direction
-Ghost.prototype.choose_direction = function()
+Ghost.prototype.choose_direction = function(ignore_current_direction=false)
 {
 	let possible_directions = [...directions.entries()].filter( ([dir, [dx,dy]]) => level.can_walk(this.x+dx, this.y+dy) )
-	if (this.speed > 0)
+	if (!ignore_current_direction)
 		possible_directions = possible_directions.filter( ([dir, [dx,dy]]) => (dir != opposite_directions[this.direction]) )
 	const candidates = find_candidate_directions(this.x, this.y, possible_directions, 3)
 	this.direction = candidates[Math.floor(Math.random()*candidates.length)][0]
-	this.speed = ghost_speed
-	this.animation_ref_end = this.animation_ref_start + 1.0/this.speed
+	this.position_animation = directionalPositionAnimation(this.x, this.y, this.direction, ghost_speed)
 }
 
 
@@ -236,26 +258,10 @@ function FlyingCoin(x, y, dest_x, dest_y)
 	const [dx, dy] = [dest_x - x, dest_y - y]
 	const l = Math.hypot(dx, dy)
 	const proportion = (l-Math.random()*0.4)/l
-	this.dest_x = x + dx * proportion
-	this.dest_y = y + dy * proportion
+	const new_dest_x = x + dx * proportion
+	const new_dest_y = y + dy * proportion
 	Sprite.call(this, x, y, 0, 0, 0)
-	this.animation_ref_end = this.animation_ref_start + l / flying_coin_speed
-}
-
-FlyingCoin.prototype.get_position = function()
-{
-	const interpolation_value = this.get_interpolation_value()
-	if (interpolation_value == null)
-		return [this.dest_x, this.dest_y]
-	return [this.x + (this.dest_x - this.x)*interpolation_value, this.y + (this.dest_y - this.y)*interpolation_value]
+	this.position_animation = new PositionAnimation(x, y, new_dest_x, new_dest_y, flying_coin_speed)
 }
 
 FlyingCoin.prototype.get_image = function() { return [0,0,3]; }
-
-FlyingCoin.prototype.frame_update = function()
-{
-	if (this.get_interpolation_value() >= 1 )
-	{
-		this.animation_ref_end = null
-	}
-}
