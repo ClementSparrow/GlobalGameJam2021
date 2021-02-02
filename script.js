@@ -175,11 +175,11 @@ let cur_level = 0
 let timestamp = 0
 function start()
 {
-	console.log('starting level', cur_level)
 	level_won = false
 	first_timestamp = null
 	timestamp = 0
 	gold_drop_objective = gold_drop_objectives[cur_level];
+	progression = 0
 	level = new Level(levels[cur_level], 100)
 	init_level_renderer()
 	init_level_logic()

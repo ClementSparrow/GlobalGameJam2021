@@ -43,7 +43,9 @@ const levels = [
 	 '#3...........2#',
 	 '###############']
 ]
-const gold_drop_objectives = [80, 80, 80];
+// todo? there is slightly less than 80 ground cells in level 2, so it is required to use a heart to solve it.
+// I'm OK with that, but it would require a reset button and a detection of the fail state.
+const gold_drop_objectives = [80, 80, 80]; 
 let gold_drop_objective = null
 
 
@@ -125,12 +127,8 @@ Level.prototype.parse_level_string = function(level_as_string)
 			}
 			else if (ch=='p')
 				this.sprites.unshift( new Player(x, y, 0, this.initial_gold) ) // players is always the first sprite
-			else if (ch=='1')
-				this.sprites.push( new Ghost(x, y, 1) )
-			else if (ch=='2')
-				this.sprites.push( new Ghost(x, y, 2) )
-			else if (ch=='3')
-				this.sprites.push( new Ghost(x, y, 3) )
+			else if ('123'.includes(ch))
+				this.sprites.push( new Ghost(x, y, Number(ch)) )
 			else if (ch=='c')
 				this.coins[y][x] = true
 		}
