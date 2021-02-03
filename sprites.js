@@ -2,6 +2,7 @@
 const directions = [[-1,0], [1,0], [0,1], [0,-1]] // West, East, South, North
 const opposite_directions = [ 1, 0, 3, 2 ]
 
+// ------ ANIMATION: POSITION -----
 
 function PositionAnimation(start_x, start_y, end_x, end_y, speed)
 {
@@ -53,10 +54,27 @@ PositionAnimation.prototype.reverse = function()
 
 
 
+// ----- ANIMATION: choice of tile ------
+
+function TileSelector(loop_duration, loop_tiles, direction_tiles, tileset)
+{
+	this.loop_duration = loop_duration
+	this.loop_tiles = loop_tiles
+	this.direction_tiles = direction_tiles
+	this.tileset = tileset
+}
+
+TileSelector.prototype.get_tile = function(direction=0)
+{
+	const frame = Math.floor(timestamp * this.loop_tiles.length/this.loop_duration) % this.loop_tiles.length
+	return [this.loop_tiles[frame], this.direction_tiles[direction], this.tileset];
+}
+
+
 
 // ---- Sprite -----
 
-function Sprite(x, y, direction, speed, gold)
+function Sprite(x, y, direction, speed, gold, tile_selector)
 {
 	// Coordinate of the starting cell for a sprite moving from this cell to an adjacent one
 	this.x = x // int, in units of cells
@@ -65,6 +83,7 @@ function Sprite(x, y, direction, speed, gold)
 	this.direction = direction
 	this.gold = gold // how many coins it holds
 	this.position_animation = ((speed==0) || (direction===null)) ? null : directionalPositionAnimation(x, y, direction, speed)
+	this.tile_selector = tile_selector
 }
 
 Sprite.prototype.get_position = function()
@@ -75,11 +94,9 @@ Sprite.prototype.get_position = function()
 Sprite.prototype.draw = function()
 {
 	const [x, y] = this.get_position()
-	const [tile_x, tile_y, tileset] = this.get_image()
-	draw_tile(x, y, tile_x, tile_y, tileset)
+	const [tile_x, tile_y, tileset] = this.tile_selector.get_tile(this.direction)
+	tileset.draw_tile(x, y, tile_x, tile_y)
 }
-
-Sprite.prototype.get_image = function() {}
 
 Sprite.prototype.init_in_level = function() {}
 
@@ -100,24 +117,13 @@ Sprite.prototype.cell_action = function() {}
 
 // ---- Player -----
 
-const player_animation_tiles = [0,1] // pour le set 1
-// const player_animation_tiles = [4,5,6,7,6,5] // pour le set 0
-const player_direction_tiles = [1,0,3,2] // pour le set 1 bis (4 directions)
-// const player_direction_tiles = [0,0,0,0] // pour le set 1 (seulement droite)
-// const player_direction_tiles = [3,4,5,6] // pour le set 0
-const player_animation_duration = 0.5 // seconds
+const player_tileSelector = new TileSelector(0.5, [0,1], [1,0,3,2], avatar_tileset)
 const player_speed = 2.8 // cells per second
 
 Player.prototype = Object.create(Sprite.prototype)
 function Player(x, y, speed, gold)
 {
-	Sprite.call(this, x, y, 2, speed*player_speed, gold)
-}
-
-Player.prototype.get_image = function()
-{
-	const frame = Math.floor(timestamp*player_animation_tiles.length/player_animation_duration) % player_animation_tiles.length
-	return [player_animation_tiles[frame], player_direction_tiles[this.direction], 1];
+	Sprite.call(this, x, y, 2, speed*player_speed, gold, player_tileSelector)
 }
 
 Player.prototype.cell_action = function()
@@ -164,26 +170,15 @@ Player.prototype.record_input = function()
 
 // ---- Ghost -----
 
-// const ghost_direction_tiles = [0,1,2,3]
-const ghost_direction_tiles = [1,0,2,3]
-const ghost_animation_tiles = [0, 1, 2, 1]
-const ghost_animation_duration = 0.5
+const ghost_tileSelectors = enemy_tilesets.map( (tileset) => new TileSelector(0.5, [0, 1, 2, 1], [1,0,2,3], tileset) )
 const ghost_speed = player_speed // cells per second
 
 Ghost.prototype = Object.create(Sprite.prototype)
 function Ghost(x, y, ghost_type)
 {
-	this.ghost_type = ghost_type
-	Sprite.call(this, x, y, 0, 0, 0)
+	this.ghost_type = ghost_type-1
+	Sprite.call(this, x, y, 0, 0, 0, ghost_tileSelectors[this.ghost_type])
 }
-
-Ghost.prototype.get_image = function()
-{
-	// TODO: this is the same code than in Player.prototype.get_image, we should factorize that
-	const frame = Math.floor(timestamp*ghost_animation_tiles.length/ghost_animation_duration) % ghost_animation_tiles.length
-	return [ghost_animation_tiles[frame], ghost_direction_tiles[this.direction], 3+this.ghost_type];
-}
-
 
 Ghost.prototype.init_in_level = function()
 {
@@ -250,6 +245,7 @@ Ghost.prototype.choose_direction = function(ignore_current_direction=false)
 
 // ---- Flying Coins -----
 
+const coins_tileSelectors = new TileSelector( 1, [0], [0], coins_tileset)
 const flying_coin_speed = 5; // tiles per second
 
 FlyingCoin.prototype = Object.create(Sprite.prototype)
@@ -260,8 +256,6 @@ function FlyingCoin(x, y, dest_x, dest_y)
 	const proportion = (l-Math.random()*0.4)/l
 	const new_dest_x = x + dx * proportion
 	const new_dest_y = y + dy * proportion
-	Sprite.call(this, x, y, 0, 0, 0)
+	Sprite.call(this, x, y, 0, 0, 0, coins_tileSelectors)
 	this.position_animation = new PositionAnimation(x, y, new_dest_x, new_dest_y, flying_coin_speed)
 }
-
-FlyingCoin.prototype.get_image = function() { return [0,0,3]; }
