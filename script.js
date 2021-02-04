@@ -1,13 +1,4 @@
 
-
-// level initialisation : choose random directions for ghosts
-function init_level_logic()
-{
-	gold_droped = 0
-	for (let s of level.sprites)
-		s.init_in_level()
-}
-
 let gold_droped = null
 let level_won = false
 function check_win_condition()
@@ -40,7 +31,7 @@ function update_rooms()
 				let [barycenter_x, barycenter_y] = level.room_centers[room_index]
 				room_border.forEach( function(cell_index) {
 					level.set_cell_data(level.coins, cell_index, false); // remove the coins on the ground
-					level.flying_coins.push( new FlyingCoin(cell_index%level.width, Math.floor(cell_index/level.width), barycenter_x, barycenter_y) )
+					level.flying_coins.push( makeFlyingCoin(cell_index%level.width, Math.floor(cell_index/level.width), barycenter_x, barycenter_y) )
 				} );
 				powerup_sound.play()
 			}
@@ -105,6 +96,7 @@ let frame_timer = null
 // ===== EVENT MANAGERS =====
 let paused = true
 let muted = false
+let [input_dx, input_dy, input_direction] = [0, 0, null]
 const arrow_dirs = {'ArrowLeft': [-1,0,0], 'ArrowRight': [1,0,1], 'ArrowDown': [0,1,2], 'ArrowUp': [0,-1,3]}
 function keyDownManager(event)
 {
@@ -179,10 +171,11 @@ function start()
 	first_timestamp = null
 	timestamp = 0
 	gold_drop_objective = gold_drop_objectives[cur_level];
-	progression = 0
+	[input_dx, input_dy, input_direction] = [0, 0, null]
 	level = new Level(levels[cur_level], 100)
 	init_level_renderer()
-	init_level_logic()
+	gold_droped = 0
+	progression = 0
 	paused = false
 	frame_timer = window.requestAnimationFrame(frame)
 	music_start()

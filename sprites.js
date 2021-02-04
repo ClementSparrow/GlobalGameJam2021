@@ -86,7 +86,7 @@ function Sprite(x, y, direction, speed, gold, tile_selector)
 	this.tile_selector = tile_selector
 }
 
-Sprite.prototype.get_position = function()
+Sprite.prototype.get_position = function() // used for rendering and collisions
 {
 	return (this.position_animation === null) ? [this.x, this.y] : this.position_animation.get_position()
 }
@@ -98,16 +98,17 @@ Sprite.prototype.draw = function()
 	tileset.draw_tile(x, y, tile_x, tile_y)
 }
 
-Sprite.prototype.init_in_level = function() {}
-
 Sprite.prototype.frame_update = function()
 {
-	if ((this.position_animation === null) || (!this.position_animation.finished()))
-		return
-	this.x = this.position_animation.end_x
-	this.y = this.position_animation.end_y
-	//	ends the current animation
-	this.position_animation = null
+	if (this.position_animation !== null)
+	{
+		if (!this.position_animation.finished())
+			return
+		this.x = this.position_animation.end_x
+		this.y = this.position_animation.end_y
+		//	ends the current animation
+		this.position_animation = null
+	}
 	//	start a new position animation if needed
 	this.cell_action()
 }
@@ -180,11 +181,6 @@ function Ghost(x, y, ghost_type)
 	Sprite.call(this, x, y, 0, 0, 0, ghost_tileSelectors[this.ghost_type])
 }
 
-Ghost.prototype.init_in_level = function()
-{
-	this.choose_direction(true)
-}
-
 Ghost.prototype.cell_action = function()
 {
 //	pick up gold
@@ -248,14 +244,14 @@ Ghost.prototype.choose_direction = function(ignore_current_direction=false)
 const coins_tileSelectors = new TileSelector( 1, [0], [0], coins_tileset)
 const flying_coin_speed = 5; // tiles per second
 
-FlyingCoin.prototype = Object.create(Sprite.prototype)
-function FlyingCoin(x, y, dest_x, dest_y)
+function makeFlyingCoin(x, y, dest_x, dest_y)
 {
 	const [dx, dy] = [dest_x - x, dest_y - y]
 	const l = Math.hypot(dx, dy)
 	const proportion = (l-Math.random()*0.4)/l
 	const new_dest_x = x + dx * proportion
 	const new_dest_y = y + dy * proportion
-	Sprite.call(this, x, y, 0, 0, 0, coins_tileSelectors)
-	this.position_animation = new PositionAnimation(x, y, new_dest_x, new_dest_y, flying_coin_speed)
+	let result = new Sprite(x, y, 0, 0, 0, coins_tileSelectors)
+	result.position_animation = new PositionAnimation(x, y, new_dest_x, new_dest_y, flying_coin_speed)
+	return result
 }
