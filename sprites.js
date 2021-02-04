@@ -100,7 +100,9 @@ Sprite.prototype.draw = function()
 
 Sprite.prototype.frame_update = function()
 {
-	if (this.position_animation !== null)
+	if (this.position_animation === null)
+		this.cell_action(false)
+	else
 	{
 		if (!this.position_animation.finished())
 			return
@@ -108,12 +110,12 @@ Sprite.prototype.frame_update = function()
 		this.y = this.position_animation.end_y
 		//	ends the current animation
 		this.position_animation = null
+		//	start a new position animation if needed
+		this.cell_action(true)
 	}
-	//	start a new position animation if needed
-	this.cell_action()
 }
 
-Sprite.prototype.cell_action = function() {}
+Sprite.prototype.cell_action = function(at_end_of_movement) {}
 
 
 // ---- Player -----
@@ -124,10 +126,10 @@ const player_speed = 2.8 // cells per second
 Player.prototype = Object.create(Sprite.prototype)
 function Player(x, y, speed, gold)
 {
-	Sprite.call(this, x, y, 2, speed*player_speed, gold, player_tileSelector)
+	Sprite.call(this, x, y, 2, 0, gold, player_tileSelector)
 }
 
-Player.prototype.cell_action = function()
+Player.prototype.cell_action = function(at_end_of_movement)
 {
 	if ((this.gold > 0) && level.can_drop_coin(this.x, this.y))
 	{
@@ -144,7 +146,7 @@ Player.prototype.cell_action = function()
 Player.prototype.change_direction = function()
 {
 	const [dest_x, dest_y] = [this.x+input_dx, this.y+input_dy]
-	if ((input_direction === undefined) || (!level.can_walk(dest_x, dest_y)))
+	if ((input_direction === null) || (!level.can_walk(dest_x, dest_y)))
 	{
 		this.position_animation = null
 	}
@@ -181,7 +183,7 @@ function Ghost(x, y, ghost_type)
 	Sprite.call(this, x, y, 0, 0, 0, ghost_tileSelectors[this.ghost_type])
 }
 
-Ghost.prototype.cell_action = function()
+Ghost.prototype.cell_action = function(at_end_of_movement)
 {
 //	pick up gold
 	if (level.can_pickup_coin(this.x, this.y))
@@ -190,7 +192,7 @@ Ghost.prototype.cell_action = function()
 		this.gold += 1
 	}
 //	pick a new direction
-	this.choose_direction();
+	this.choose_direction(!at_end_of_movement)
 }
 
 function find_candidate_directions(start_x, start_y, possible_directions, max_dist = Number.MAX_SAFE_INTEGER)
@@ -228,7 +230,7 @@ function find_candidate_directions(start_x, start_y, possible_directions, max_di
 
 // at intersections, ghosts will go towards the closest coin in line of sight,
 // and otherwise a random non-backward direction
-Ghost.prototype.choose_direction = function(ignore_current_direction=false)
+Ghost.prototype.choose_direction = function(ignore_current_direction)
 {
 	let possible_directions = [...directions.entries()].filter( ([dir, [dx,dy]]) => level.can_walk(this.x+dx, this.y+dy) )
 	if (!ignore_current_direction)
