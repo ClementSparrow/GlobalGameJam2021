@@ -143,7 +143,7 @@ window.onload = function()
 div_end = document.getElementById('div_end')
 div_end.style.display = 'none' // 'block' to show it
 div_start = document.getElementById('div_start')
-div_start.style.display = 'block'
+// div_start.style.display = 'block'
 
 function end_level()
 {

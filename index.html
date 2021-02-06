@@ -19,7 +19,7 @@
 			font: 30px Pipe Dream;
 			cursor: pointer;
 		}
-		button:hover { box-shadow: 0 0 12px #F36 }
+		button:hover, button:focus { box-shadow: 0 0 12px #F36; outline: none; }
 		body {
 			font: 22px Pipe Dream;
 			text-align: center;
@@ -47,15 +47,15 @@
 <body>
 	<h2>Lost Souls Found The Gold You Lost To Save Your Soul</h2>
 	<canvas id=canvas width=800 height=600></canvas>
-	<div id=div_start>
+	<div id=div_start autofocus="">
 		<h2>Level <span id=spn_level>1</span></h2>
 		<p id=p_intro>Foolish self! After years of gathering coins, your soul has been tainted with money.<br/>
 		To redeem your peace of mind, you must lay down all of your coins.<br/>
 		The greedy Pac-Men will happily collect them, but don't hit them or you'll get their count back!</p>
 		<p>Controls: arrow keys to move, P to pause/unpause the game</p>
-		<button onclick="div_start.style.display='none'; start()">Start</button>
+		<button onclick="div_start.style.display='none'; start()" autofocus="">Start</button>
 	</div>
-	<div id=div_end>
+	<div id=div_end style="display: none;">
 		<h2>Game Over</h2>
 		<p>Congratulations, you lost a total of <span id=spn_score >N</span> coins over <span id=spn_levels>N</span> levels!</p>
 		<p>Credits: Clement Sparrow (Programming), Nicole Pong (Graphics), Thibault Raffaillac (Music, UI)</p>
