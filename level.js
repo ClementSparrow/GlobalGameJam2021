@@ -41,11 +41,29 @@ const levels = [
 	 '#......#.#....#',
 	 '#.######.#.@@.#',
 	 '#3...........2#',
-	 '###############']
+	 '###############'],
+	['################',
+	 '#..............#',
+	 '#.###.####.###.#',
+	 '#...#.####.#...#',
+	 '###.#.####.#.###',
+	 '#...#......#...#',
+	 '#.####....####.#',
+	 '#......@@......#',
+	 '####.@@@@@@.####',
+	 '####.@@@@@@.####',
+	 '#......@@......#',
+	 '#.####....####.#',
+	 '#...#......#...#',
+	 '###.#.####.#.###',
+	 '#...#.####.#...#',
+	 '#.###.####.###.#',
+	 '#..............#',
+	 '################']
 ]
 // todo? there is slightly less than 80 ground cells in level 2, so it is required to use a heart to solve it.
 // I'm OK with that, but it would require a reset button and a detection of the fail state.
-const gold_drop_objectives = [80, 80, 80]; 
+const gold_drop_objectives = [80, 80, 80, 80]; 
 let gold_drop_objective = null
 
 
