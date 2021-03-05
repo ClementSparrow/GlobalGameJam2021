@@ -131,11 +131,24 @@ function Player(x, y, speed, gold)
 
 Player.prototype.cell_action = function(at_end_of_movement)
 {
+	const previous_gold = this.gold
 	if ((this.gold > 0) && level.can_drop_coin(this.x, this.y))
 	{
 		// TODO: move this out of the Player class, as it is a game mechanic that could also be given to ghosts
 		level.coins[this.y][this.x] = true
 		this.gold -= 1
+	}
+	// for (const [dir, [dx, dy]] of directions.entries())
+	// {
+	// 	const [x2, y2] = [this.x+dx, this.y+dy]
+	// 	if ((this.gold <= 0) || !level.can_walk(x2, y2) || !level.can_drop_coin(x2, y2))
+	// 		continue
+	// 	// TODO: move this out of the Player class, as it is a game mechanic that could also be given to ghosts
+	// 	level.coins[y2][x2] = true
+	// 	this.gold -= 1
+	// }
+	if (this.gold < previous_gold)
+	{
 		// coin_sound.play()
 		check_win_condition()
 		update_rooms()
