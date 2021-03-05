@@ -170,9 +170,10 @@ function start()
 	level_won = false
 	first_timestamp = null
 	timestamp = 0
-	gold_drop_objective = gold_drop_objectives[cur_level];
+	gold_drop_objective = levels[cur_level].reduce((sum, line) =>
+		sum + (line.match(/\./g)||[]).length, 0) - 10;
 	[input_dx, input_dy, input_direction] = [0, 0, null]
-	level = new Level(levels[cur_level], 100)
+	level = new Level(levels[cur_level], gold_drop_objective+40)
 	init_level_renderer()
 	gold_droped = 0
 	progression = 0
